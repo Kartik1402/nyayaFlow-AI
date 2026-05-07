@@ -1,0 +1,11 @@
+fastapi==0.111.1
+uvicorn==0.24.0
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.11
+pydantic==2.13.3
+pydantic-settings==2.14.0
+python-multipart>=0.0.7
+httpx>=0.24.0
+PyMuPDF==1.23.1
+pillow==12.2.0
+pytesseract==0.3.13
