@@ -20,7 +20,12 @@ def call_mistral(prompt: str, model: str | None = None, temperature: float = 0.0
     if not settings.llm_base_url:
         raise RuntimeError("LLM_BASE_URL is required for Mistral provider.")
 
-    url = f"{settings.llm_base_url.rstrip('/')}/v1/chat/completions"
+    base_url = settings.llm_base_url.rstrip("/")
+    if base_url.endswith("/v1/chat/completions"):
+        url = base_url
+    else:
+        url = f"{base_url}/v1/chat/completions"
+
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
