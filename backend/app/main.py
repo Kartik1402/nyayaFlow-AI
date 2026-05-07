@@ -7,6 +7,8 @@ from typing import Any, Optional
 
 from fastapi import Depends, FastAPI, Body, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import ValidationError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -156,12 +158,18 @@ def extract_case(case_id: int, db: Session = Depends(get_db)):
         merged = run_extraction(case_id, db)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except (ValidationError, SQLAlchemyError) as exc:
+        db.rollback()
+        logging.exception("Extraction failed for case %s", case_id)
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}")
     except RuntimeError as exc:
+        db.rollback()
         logging.error("Extraction runtime error for case %s: %s", case_id, exc)
         raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}")
     except Exception as exc:
+        db.rollback()
         logging.exception("Unexpected extraction failure for case %s", case_id)
-        raise HTTPException(status_code=500, detail="Unexpected extraction error")
+        raise HTTPException(status_code=500, detail=f"Unexpected extraction error: {exc}")
 
     case = crud.get_case(db, case_id)
     if not case:

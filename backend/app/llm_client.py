@@ -5,7 +5,7 @@ from typing import Any, Dict
 from app.config import settings
 
 
-def call_mistral(prompt: str, model: str | None = None, temperature: float = 0.0) -> str:
+def call_mistral(prompt: str, model: str | None = None, temperature: float = 0.0, max_tokens: int = 1200) -> str:
     api_key = (
         settings.llm_api_key
         or settings.openai_api_key
@@ -29,6 +29,7 @@ def call_mistral(prompt: str, model: str | None = None, temperature: float = 0.0
         "model": model or settings.llm_model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": temperature,
+        "max_tokens": max_tokens,
     }
 
     with httpx.Client(timeout=60.0) as client:
@@ -49,7 +50,7 @@ def call_mistral(prompt: str, model: str | None = None, temperature: float = 0.0
 def call_llm(prompt: str, temperature: float = 0.0, max_tokens: int = 1200) -> str:
     provider = settings.llm_provider.lower()
     if provider == "mistral":
-        return call_mistral(prompt, temperature=temperature)
+        return call_mistral(prompt, temperature=temperature, max_tokens=max_tokens)
 
     try:
         import openai

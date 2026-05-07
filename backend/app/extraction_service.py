@@ -1,3 +1,4 @@
+import httpx
 import json
 import re
 from collections import Counter
@@ -235,7 +236,12 @@ def safe_parse_json(response_text: str) -> Dict[str, Any]:
 
 def call_llm_extractor(chunk_text: str, chunk_index: int, repair_instruction: Optional[str] = None) -> str:
     prompt = build_extractor_prompt(chunk_text, chunk_index, repair_instruction)
-    return call_llm(prompt, temperature=0.0, max_tokens=800)
+    try:
+        return call_llm(prompt, temperature=0.0, max_tokens=800)
+    except httpx.HTTPError as exc:
+        raise RuntimeError(f"LLM request failed: {exc}") from exc
+    except Exception as exc:
+        raise RuntimeError(f"LLM extraction failed: {exc}") from exc
 
 
 class CaseDetails(BaseModel):
