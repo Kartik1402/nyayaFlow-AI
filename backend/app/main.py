@@ -24,9 +24,16 @@ app = FastAPI(title="Court Judgment Verified Action Plans")
 
 @app.on_event("startup")
 def startup() -> None:
-    Base.metadata.create_all(bind=engine)
     upload_dir = Path(settings.upload_dir)
     upload_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as exc:
+        logging.error("Database initialization failed on startup: %s", exc)
+        logging.error(
+            "Please verify DATABASE_URL is set and the database is reachable. "
+            "The app will continue to run, but DB operations may fail."
+        )
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
