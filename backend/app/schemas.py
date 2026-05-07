@@ -41,6 +41,13 @@ class CaseReviewRequest(BaseModel):
     edited_payload: Optional[Dict[str, Any]] = None
 
 
+class FinalReviewRequest(BaseModel):
+    action: Literal["edit", "reject"]
+    feedback: str
+    reprocess_stages: Optional[List[Literal["extractor", "reasoning", "action_plan"]]] = None
+    edited_payload: Optional[Dict[str, Any]] = None
+
+
 class ReviewActionRequest(BaseModel):
     case_id: int
     reviewer_comment: Optional[str] = None
