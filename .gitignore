@@ -11,11 +11,13 @@ backend/__pycache__/
 backend/*.db
 backend/*.sqlite
 backend/.env
+backend/uploads/
 
 # Node
 node_modules/
 /dist
 frontend/dist/
+frontend/.env
 
 # Local data
 pgadmin_data/

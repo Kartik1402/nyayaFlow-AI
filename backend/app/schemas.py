@@ -41,6 +41,17 @@ class CaseReviewRequest(BaseModel):
     edited_payload: Optional[Dict[str, Any]] = None
 
 
+class ReviewActionRequest(BaseModel):
+    case_id: int
+    reviewer_comment: Optional[str] = None
+    rejection_type: Optional[str] = Field(None, pattern="^(extraction|reasoning|action_plan)$")
+    edited_payload: Optional[Dict[str, Any]] = None
+
+
+class ReprocessRequest(FinalReviewRequest):
+    case_id: int
+
+
 class CaseResponse(BaseCase):
     id: int
     created_at: datetime

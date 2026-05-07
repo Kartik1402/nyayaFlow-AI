@@ -50,10 +50,29 @@ function getMappedCaseStatus(rawStatus?: string) {
   const status = rawStatus?.toLowerCase().trim()
   if (!status) return undefined
   if (status === 'processing' || status === 'pending' || status === 'draft') return 'Processing'
-  if (['pending_review', 'processed', 'needs_manual_review', 'ready_for_review'].includes(status)) return 'Ready for Review'
-  if (status === 'approved') return 'Verified'
+  if (['pending_review', 'processed', 'needs_manual_review', 'ready_for_review', 'ready for review'].includes(status)) return 'Ready for Review'
+  if (status === 'approved' || status === 'verified') return 'Verified'
   if (['rejected', 'reprocessed'].includes(status)) return 'Reprocessed'
   return undefined
+}
+
+function normalizePriority(priority?: string) {
+  if (!priority) return 'Medium'
+  const value = priority.trim().toLowerCase()
+  if (value === 'high') return 'High'
+  if (value === 'low') return 'Low'
+  return 'Medium'
+}
+
+function getSearchablePartyNames(parties: ExtractionParties) {
+  if (!parties) return ''
+  if (Array.isArray(parties)) {
+    return parties
+      .map((item) => (typeof item === 'string' ? item : item.name || item.role || ''))
+      .filter(Boolean)
+      .join(' ')
+  }
+  return String(parties)
 }
 
 function getStatusTagStyles(status: string) {
@@ -135,19 +154,21 @@ export default function CasesPage() {
       .map((item) => ({
         ...item,
         mappedStatus: getMappedCaseStatus(item.status),
+        normalizedPriority: normalizePriority(item.reasoning?.priority || item.action_plan?.priority),
+        searchableParties: getSearchablePartyNames(item.extraction?.parties),
       }))
       .filter((item) => {
         if (!item.mappedStatus) return false
 
         const matchesStatus = filterStatus ? item.mappedStatus === filterStatus : true
-        const priority = item.reasoning?.priority || item.action_plan?.priority || 'Medium'
-        const matchesPriority = filterPriority ? priority === filterPriority : true
+        const matchesPriority = filterPriority ? item.normalizedPriority === filterPriority : true
         const normalizedSearch = searchTerm.trim().toLowerCase()
         const matchesSearch = normalizedSearch
           ? [
               getDisplayTitle(item),
               item.extraction?.case_number || '',
               item.extraction?.court_name || '',
+              item.searchableParties || '',
             ]
               .join(' ')
               .toLowerCase()
@@ -163,10 +184,15 @@ export default function CasesPage() {
         }
         if (sortBy === 'priority') {
           const priorityOrder = { High: 0, Medium: 1, Low: 2 }
-          const priorityA = a.reasoning?.priority || a.action_plan?.priority || 'Medium'
-          const priorityB = b.reasoning?.priority || b.action_plan?.priority || 'Medium'
+          const priorityA = a.normalizedPriority
+          const priorityB = b.normalizedPriority
           return (priorityOrder[priorityA as keyof typeof priorityOrder] ?? 1) -
             (priorityOrder[priorityB as keyof typeof priorityOrder] ?? 1)
+        }
+        if (sortBy === 'case_number') {
+          const caseA = a.extraction?.formatted_case_number || a.extraction?.case_number || String(a.id)
+          const caseB = b.extraction?.formatted_case_number || b.extraction?.case_number || String(b.id)
+          return caseA.localeCompare(caseB, undefined, { numeric: true, sensitivity: 'base' })
         }
         return 0
       })
@@ -317,7 +343,7 @@ export default function CasesPage() {
               visibleCases.map((caseItem) => {
                 const mappedStatus = getMappedCaseStatus(caseItem.status) || 'Processing'
                 const isProcessing = mappedStatus === 'Processing'
-                const priority = caseItem.reasoning?.priority || caseItem.action_plan?.priority || 'Medium'
+                const priority = normalizePriority(caseItem.reasoning?.priority || caseItem.action_plan?.priority)
                 const normalizedCaseNumber = caseItem.extraction?.formatted_case_number || (caseItem.extraction?.case_number && caseItem.extraction?.filing_year ? `${caseItem.extraction.case_number}/${caseItem.extraction.filing_year}` : caseItem.extraction?.case_number)
                 const headerTitle = normalizedCaseNumber ? `Case ${normalizedCaseNumber}` : `Case #${caseItem.id}`
                 const titleText = getDisplayTitle(caseItem)

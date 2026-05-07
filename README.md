@@ -109,6 +109,115 @@ Then open `http://localhost:5173` in your browser.
 - The system preserves all enrichment stages and supports reprocessing after rejection.
 - A PowerShell Podman setup script is available at `podman-setup.ps1`.
 
+## Production Deployment
+
+### Frontend (Vercel)
+
+1. Deploy the `frontend` folder as a Vercel project.
+2. Set the build command to:
+   ```bash
+   npm install && npm run build
+   ```
+3. Set the output directory to:
+   ```text
+   dist
+   ```
+4. Add the environment variable:
+   ```text
+   VITE_API_BASE_URL=https://<your-backend-url>
+   ```
+5. Use `frontend/vercel.json` to ensure SPA rewrites for routes like `/cases`, `/cases/:id`, and `/verified`.
+
+### Backend (Render)
+
+1. Deploy the backend using Render as a Python web service.
+2. Use `render.yaml` in the repo root or configure the service manually.
+3. Set the build command to:
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+4. Set the start command to:
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port $PORT
+   ```
+5. Configure environment variables on Render:
+   - `DATABASE_URL`
+   - `OPENAI_API_KEY`
+   - `LLM_PROVIDER`
+   - `LLM_MODEL`
+   - `LLM_BASE_URL`
+   - `ALLOWED_ORIGINS`
+   - `UPLOADS_DIR`
+
+### Database
+
+Use a managed PostgreSQL provider such as Neon or Supabase. Set `DATABASE_URL` with the provider connection string.
+
+### Deployment architecture
+
+- Frontend
+  - Hosted on Vercel
+  - Uses `VITE_API_BASE_URL` to communicate with backend APIs
+  - SPA routing handled by `frontend/vercel.json`
+- Backend
+  - Hosted on Render
+  - Serves FastAPI endpoints and AI pipeline
+  - Uses PostgreSQL for persistence and `backend/uploads` for temporary file storage
+- Database
+  - Hosted as Neon or Supabase PostgreSQL
+
+### API Endpoints
+
+- `POST /upload-case` — upload PDF or text file
+- `GET /cases` — list cases
+- `GET /cases/:id` — get case detail
+- `POST /cases/:id/process` — run AI processing pipeline
+- `POST /cases/:id/review` — approve/reject/edit review action
+- `POST /cases/:id/reprocess` — reprocess case stages
+- `POST /review/approve` — approve by case ID
+- `POST /review/reject` — reject by case ID
+- `POST /reprocess` — reprocess by case ID
+- `GET /health` — health check
+
+### Environment Variables
+
+Frontend:
+
+```text
+VITE_API_BASE_URL=https://<your-backend-url>
+```
+
+Backend:
+
+```text
+DATABASE_URL=postgresql+psycopg2://<user>:<pass>@<host>:<port>/<db>
+OPENAI_API_KEY=...
+LLM_PROVIDER=mistral
+LLM_MODEL=mistral-small-latest
+LLM_API_KEY=...
+LLM_BASE_URL=https://api.mistral.ai/v1/chat/completions
+ALLOWED_ORIGINS=https://<your-frontend-url>
+UPLOADS_DIR=uploads
+```
+
+### Production build commands
+
+Frontend:
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Backend:
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
 ## Podman PostgreSQL + pgAdmin Setup
 
 1. Run the script from the repository root:

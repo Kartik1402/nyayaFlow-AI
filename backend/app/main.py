@@ -2,9 +2,10 @@ import io
 import logging
 import re
 from datetime import datetime
+from pathlib import Path
 from typing import Any, Optional
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, Body, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
@@ -22,8 +23,14 @@ app = FastAPI(title="Court Judgment Verified Action Plans")
 
 
 @app.on_event("startup")
-def create_database_tables() -> None:
+def startup() -> None:
     Base.metadata.create_all(bind=engine)
+    upload_dir = Path(settings.upload_dir)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,11 +59,22 @@ def _is_text_upload(file: UploadFile) -> bool:
     return False
 
 
+def _save_uploaded_file(file: UploadFile) -> str:
+    upload_dir = Path(settings.upload_dir)
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    file_path = upload_dir / Path(file.filename).name
+    with file_path.open("wb") as dst:
+        dst.write(file.file.read())
+    return str(file_path)
+
+
 @app.post("/cases/upload", response_model=schemas.UploadResponse)
 def upload_case(file: UploadFile = File(...), db: Session = Depends(get_db)):
     if not (_is_pdf_upload(file) or _is_text_upload(file)):
         raise HTTPException(status_code=400, detail="Upload PDF or plain text only.")
 
+    _save_uploaded_file(file)
+    file.file.seek(0)
     raw_bytes = file.file.read()
     document = process_document(
         raw_bytes=raw_bytes,
@@ -86,6 +104,43 @@ def upload_case(file: UploadFile = File(...), db: Session = Depends(get_db)):
         chunks=chunks_with_ids,
         status="processed",
     )
+
+
+@app.post("/upload-case", response_model=schemas.UploadResponse)
+def upload_case_alias(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    return upload_case(file, db)
+
+
+@app.post("/review/approve", response_model=schemas.CaseResponse)
+def review_approve(request: schemas.ReviewActionRequest, db: Session = Depends(get_db)):
+    case = crud.get_case(db, request.case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    review_request = schemas.CaseReviewRequest(action="approve", reviewer_comment=request.reviewer_comment)
+    response = review_case(case.id, review_request, db)
+    return response
+
+
+@app.post("/review/reject", response_model=schemas.CaseResponse)
+def review_reject(request: schemas.ReviewActionRequest, db: Session = Depends(get_db)):
+    case = crud.get_case(db, request.case_id)
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    if not request.rejection_type:
+        raise HTTPException(status_code=400, detail="rejection_type is required for reject action")
+    review_request = schemas.CaseReviewRequest(
+        action="reject",
+        reviewer_comment=request.reviewer_comment,
+        rejection_type=request.rejection_type,
+        edited_payload=request.edited_payload,
+    )
+    response = review_case(case.id, review_request, db)
+    return response
+
+
+@app.post("/reprocess", response_model=schemas.FinalReviewResponse)
+def reprocess_alias(request: schemas.ReprocessRequest, db: Session = Depends(get_db)):
+    return reprocess_case(request.case_id, request, db)
 
 
 @app.post("/cases/{case_id}/extract")

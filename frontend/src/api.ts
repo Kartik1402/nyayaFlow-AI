@@ -1,6 +1,6 @@
 import { CaseResponse, FinalReviewRequest, FinalReviewResponse, ReviewRequest } from './types'
 
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
 
 async function handleResponse(response: Response) {
   if (!response.ok) {
@@ -47,7 +47,7 @@ export async function uploadCase(file: File): Promise<{ case_id: number }> {
   const formData = new FormData()
   formData.append('file', file)
 
-  return fetch(`${BASE_URL}/cases/upload`, {
+  return fetch(`${BASE_URL}/upload-case`, {
     method: 'POST',
     body: formData,
   }).then(handleResponse)
