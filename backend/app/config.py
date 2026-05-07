@@ -1,3 +1,4 @@
+import json
 import re
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
@@ -17,7 +18,19 @@ class Settings(BaseSettings):
     @classmethod
     def parse_allowed_origins(cls, value):
         if isinstance(value, str):
+            raw = value.strip()
+            if not raw:
+                return []
+            if raw.startswith("[") and raw.endswith("]"):
+                try:
+                    parsed = json.loads(raw)
+                    if isinstance(parsed, list):
+                        return [str(item).strip() for item in parsed if str(item).strip()]
+                except ValueError:
+                    pass
             return [item.strip() for item in re.split(r"[;,\s]+", value) if item.strip()]
+        if isinstance(value, list):
+            return [str(item).strip() for item in value if str(item).strip()]
         return value
 
     class Config:
