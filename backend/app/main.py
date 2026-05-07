@@ -21,6 +21,7 @@ from app.extraction_service import run_extraction
 from app.utils import normalize_title
 
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 app = FastAPI(title="Court Judgment Verified Action Plans")
 
 
@@ -665,26 +666,33 @@ def action_plan_case(case_id: int, db: Session = Depends(get_db)):
 
 @app.post("/cases/{case_id}/process", response_model=schemas.CaseResponse)
 def process_case(case_id: int, db: Session = Depends(get_db)):
-    case = crud.get_case(db, case_id)
-    if not case:
-        raise HTTPException(status_code=404, detail="Case not found")
+    try:
+        case = crud.get_case(db, case_id)
+        if not case:
+            raise HTTPException(status_code=404, detail="Case not found")
 
-    agent_chunks = _prepare_agent_chunks(case.chunks)
-    if not agent_chunks:
-        raise HTTPException(status_code=400, detail="No valid chunks available for processing")
+        agent_chunks = _prepare_agent_chunks(case.chunks)
+        if not agent_chunks:
+            raise HTTPException(status_code=400, detail="No valid chunks available for processing")
 
-    extraction = run_extraction_agent(agent_chunks)
-    decision = run_decision_agent(extraction)
-    action_plan = run_action_plan_agent(extraction, decision)
+        extraction = run_extraction_agent(agent_chunks)
+        decision = run_decision_agent(extraction)
+        action_plan = run_action_plan_agent(extraction, decision)
 
-    case.extraction = _to_json_safe(extraction)
-    case.reasoning = _to_json_safe(decision)
-    case.action_plan = _to_json_safe(action_plan)
-    case.status = "processed"
-    db.commit()
-    db.refresh(case)
+        case.extraction = _to_json_safe(extraction)
+        case.reasoning = _to_json_safe(decision)
+        case.action_plan = _to_json_safe(action_plan)
+        case.status = "processed"
+        db.commit()
+        db.refresh(case)
 
-    return case
+        return case
+    except HTTPException:
+        raise
+    except Exception as exc:
+        db.rollback()
+        logger.exception("Processing failed for case %s", case_id)
+        raise HTTPException(status_code=500, detail=f"Case processing failed: {exc}")
 
 
 def _normalize_extraction_parties(raw_parties: Any) -> list[schemas.ExtractionParty]:
