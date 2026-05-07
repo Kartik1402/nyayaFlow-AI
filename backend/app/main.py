@@ -156,6 +156,13 @@ def extract_case(case_id: int, db: Session = Depends(get_db)):
         merged = run_extraction(case_id, db)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
+    except RuntimeError as exc:
+        logging.error("Extraction runtime error for case %s: %s", case_id, exc)
+        raise HTTPException(status_code=500, detail=f"Extraction failed: {exc}")
+    except Exception as exc:
+        logging.exception("Unexpected extraction failure for case %s", case_id)
+        raise HTTPException(status_code=500, detail="Unexpected extraction error")
+
     case = crud.get_case(db, case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
