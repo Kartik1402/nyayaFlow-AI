@@ -67,5 +67,4 @@ export async function uploadAndProcessCase(file: File): Promise<CaseResponse> {
 export async function deleteCase(caseId: number): Promise<CaseResponse> {
   return fetch(`${BASE_URL}/cases/${caseId}`, {
     method: 'DELETE',
-  }).then(handleResponse)
-}
+  }).then(handleResponse) }
