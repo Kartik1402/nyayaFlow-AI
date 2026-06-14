@@ -33,7 +33,6 @@ podman run -d --name court-postgres -p 15432:5432 `
     -e POSTGRES_DB=courtcases `
     -v court_pgdata:/var/lib/postgresql/data `
     docker.io/library/postgres:16
-
 Write-Host 'Starting pgAdmin container on host port 15443...'
 podman run -d --name court-pgadmin -p 15443:80 `
     -e PGADMIN_DEFAULT_EMAIL=admin@example.com `
