@@ -1,6 +1,6 @@
 # Court Judgments → Verified Action Plans System
 
-This repository implements a complete AI-powered pipeline for extracting court judgment directives, reasoning about administrative action, generating action plans, explaining decisions, and enforcing human verification before final dashboard publication.
+This repository implements a complete AI-powered pipeline for extracting court judgment directives, reasoning about administrative action, generating action plans, explaining decisions, and enforcing human verification before the final dashboard publication.
 
 ## Architecture
 
