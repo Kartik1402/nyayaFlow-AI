@@ -24,4 +24,5 @@ services:
         value: https://your-frontend-url.vercel.app
       - key: UPLOADS_DIR
         value: uploads
+    
     autoDeploy: true
