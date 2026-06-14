@@ -23,5 +23,4 @@ CREATE TABLE extraction_chunks (
     case_id INTEGER NOT NULL REFERENCES cases(id),
     chunk_index INTEGER NOT NULL,
     raw_output JSONB,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);
