@@ -259,11 +259,13 @@ export default function ReviewerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface text-slate-900">
+      <div className="min-h-screen bg-darkbg text-slate-200">
         <div className="flex min-h-screen">
           <Sidebar onAddCase={() => navigate('/cases')} />
-          <div className="flex-1 p-6 lg:p-8">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">Loading case details...</div>
+          <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
+            <div className="rounded-xl border border-slateface bg-graphite p-8 shadow-sm text-center text-slate-400">
+              Loading dossier analysis...
+            </div>
           </div>
         </div>
       </div>
@@ -272,18 +274,18 @@ export default function ReviewerDashboard() {
 
   if (error || !selectedCase) {
     return (
-      <div className="min-h-screen bg-surface text-slate-900">
+      <div className="min-h-screen bg-darkbg text-slate-200">
         <div className="flex min-h-screen">
           <Sidebar onAddCase={() => navigate('/cases')} />
-          <div className="flex-1 p-6 lg:p-8">
-            <div className="rounded-[28px] border border-slate-200 bg-white p-8 shadow-sm">
-              <p className="text-red-600">{error || 'Case not found.'}</p>
+          <div className="flex-1 p-6 lg:p-8 flex items-center justify-center">
+            <div className="rounded-xl border border-red-500/25 bg-graphite p-8 shadow-sm text-center">
+              <p className="text-red-400 font-semibold mb-4">{error || 'Case file not found.'}</p>
               <button
                 type="button"
                 onClick={() => navigate('/cases')}
-                className="mt-4 rounded-3xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                className="rounded-lg bg-darkbg border border-slateface px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slateface"
               >
-                Back to All Cases
+                Back to Intake Queue
               </button>
             </div>
           </div>
@@ -293,10 +295,10 @@ export default function ReviewerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-slate-900">
+    <div className="min-h-screen bg-darkbg text-slate-100">
       <div className="flex min-h-screen">
         <Sidebar onAddCase={() => navigate('/cases')} />
-        <div className="flex-1 p-6 lg:p-8">
+        <div className="flex-1 p-6 lg:p-8 space-y-6">
           <Header
             caseId={selectedCase.extraction?.formatted_case_number || selectedCase.extraction?.case_number || `#${selectedCase.id}`}
             version={`V${selectedCase.version}`}

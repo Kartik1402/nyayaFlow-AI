@@ -78,15 +78,15 @@ function getSearchablePartyNames(parties: ExtractionParties) {
 function getStatusTagStyles(status: string) {
   switch (status) {
     case 'Processing':
-      return 'bg-sky-100 text-sky-700 border-sky-200'
+      return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
     case 'Ready for Review':
-      return 'bg-amber-100 text-amber-700 border-amber-200'
+      return 'bg-amber-500/10 text-amber-400 border-amber-500/20'
     case 'Verified':
-      return 'bg-sky-100 text-sky-700 border-sky-200'
+      return 'bg-limeaccent/10 text-limeaccent border-limeaccent/20 shadow-lime'
     case 'Reprocessed':
-      return 'bg-rose-100 text-rose-700 border-rose-200'
+      return 'bg-red-500/10 text-red-400 border-red-500/20'
     default:
-      return 'bg-slate-100 text-slate-700 border-slate-200'
+      return 'bg-slateface text-slate-300 border-slateface'
   }
 }
 
@@ -118,13 +118,13 @@ function getPriorityLabel(priority?: string) {
 function priorityTagStyles(priority?: string) {
   switch (priority) {
     case 'High':
-      return 'bg-rose-100 text-rose-700 border-rose-200'
+      return 'bg-red-500/10 text-red-400 border-red-500/20'
     case 'Medium':
-      return 'bg-sky-100 text-sky-700 border-sky-200'
+      return 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20'
     case 'Low':
-      return 'bg-amber-100 text-amber-700 border-amber-200'
+      return 'bg-slateface text-slate-300 border-slateface'
     default:
-      return 'bg-slate-100 text-slate-700 border-slate-200'
+      return 'bg-slateface text-slate-400 border-slateface'
   }
 }
 
@@ -240,51 +240,51 @@ export default function CasesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-surface text-slate-900">
+    <div className="min-h-screen bg-darkbg text-slate-100">
       <div className="flex min-h-screen">
         <Sidebar onAddCase={() => setUploadOpen(true)} />
         <div className="flex-1 p-6 lg:p-8">
-          <div className="mt-6 rounded-[32px] border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+          <div className="mt-6 rounded-2xl border border-slateface bg-graphite p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-8 border-b border-slateface pb-6">
               <div className="min-w-0">
-                <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Case management</p>
-                <h1 className="mt-3 text-3xl font-semibold text-slate-950">All Cases</h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                  Review and manage AI-processed legal cases clearly and efficiently.
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 font-display">Intelligence Queue</p>
+                <h1 className="mt-2 text-2xl font-bold font-display text-white">All Intake Cases</h1>
+                <p className="mt-2.5 max-w-2xl text-xs text-slate-400">
+                  Review and manage AI-processed legal cases and verify actions.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setUploadOpen(true)}
-                className="inline-flex items-center justify-center rounded-3xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-500"
+                className="inline-flex items-center justify-center rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
               >
-                Add Cases
+                Add Case Files
               </button>
             </div>
 
             <div className="mt-6 grid gap-4 xl:grid-cols-[1.8fr_1fr]">
-              <div className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4 shadow-sm">
-                <label className="text-sm font-semibold text-slate-700">Search by Case ID or party name</label>
+              <div className="rounded-xl border border-slateface bg-darkbg px-4 py-3.5">
+                <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 block mb-2">Search case file or party</label>
                 <input
                   value={searchTerm}
                   onChange={(event) => {
                     setSearchTerm(event.target.value)
                     setPage(1)
                   }}
-                  placeholder="Search by Case ID or party name..."
-                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                  placeholder="Search case title, number, or litigants..."
+                  className="w-full rounded-lg border border-slateface bg-graphite px-4 py-2.5 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
-                <div className="min-w-0 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <label className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Status</label>
+                <div className="min-w-0 rounded-xl border border-slateface bg-darkbg px-4 py-3.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 block mb-2">Status</label>
                   <select
                     value={filterStatus}
                     onChange={(event) => {
                       setFilterStatus(event.target.value)
                       setPage(1)
                     }}
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2.5 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {STATUS_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -293,15 +293,15 @@ export default function CasesPage() {
                     ))}
                   </select>
                 </div>
-                <div className="min-w-0 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <label className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Priority</label>
+                <div className="min-w-0 rounded-xl border border-slateface bg-darkbg px-4 py-3.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 block mb-2">Priority</label>
                   <select
                     value={filterPriority}
                     onChange={(event) => {
                       setFilterPriority(event.target.value)
                       setPage(1)
                     }}
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2.5 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {PRIORITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -310,12 +310,12 @@ export default function CasesPage() {
                     ))}
                   </select>
                 </div>
-                <div className="min-w-0 rounded-3xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <label className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Sort by</label>
+                <div className="min-w-0 rounded-xl border border-slateface bg-darkbg px-4 py-3.5">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-400 block mb-2">Sort by</label>
                   <select
                     value={sortBy}
                     onChange={(event) => setSortBy(event.target.value)}
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-200"
+                    className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2.5 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {SORT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -336,8 +336,8 @@ export default function CasesPage() {
 
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
             {loading ? (
-              <div className="col-span-full rounded-[28px] border border-slate-200 bg-white p-8 text-slate-600 shadow-sm">
-                Loading cases...
+              <div className="col-span-full rounded-2xl border border-slateface bg-graphite p-8 text-center text-slate-400 shadow-sm">
+                Loading database logs...
               </div>
             ) : (
               visibleCases.map((caseItem) => {
@@ -358,7 +358,7 @@ export default function CasesPage() {
                 return (
                   <div
                     key={caseItem.id}
-                    className="group rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm transition hover:border-slate-900 hover:shadow-lg"
+                    className="group rounded-2xl border border-slateface bg-graphite p-5 shadow-sm transition hover:border-limeaccent/35 hover:-translate-y-0.5 cursor-pointer flex flex-col justify-between"
                     onClick={() => navigate(`/cases/${caseItem.id}`)}
                     role="button"
                     tabIndex={0}
@@ -368,72 +368,69 @@ export default function CasesPage() {
                       }
                     }}
                   >
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <span className="rounded-2xl border border-slate-200 bg-slate-100 px-3 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-slate-700">
-                        {caseItem.extraction?.case_number ? `Case ${caseItem.extraction.case_number}` : `Case #${caseItem.id}`}
-                      </span>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`rounded-2xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] ${getStatusTagStyles(mappedStatus)}`}>
-                          {mappedStatus}
+                    <div>
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slateface/60 pb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 font-display">
+                          {caseItem.extraction?.case_number ? `No. ${caseItem.extraction.case_number}` : `Case #${caseItem.id}`}
                         </span>
-                        <span className={`rounded-2xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] ${priorityTagStyles(priority)}`}>
-                          {getPriorityLabel(priority)}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getStatusTagStyles(mappedStatus)}`}>
+                            {mappedStatus}
+                          </span>
+                          <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${priorityTagStyles(priority)}`}>
+                            {getPriorityLabel(priority)}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="mt-4 flex items-center justify-between gap-4">
-                      <div>
-                        <h2 className="text-xl font-semibold text-slate-950">{headerTitle}</h2>
-                        {showSubtitle ? (
-                          <p className="mt-2 text-sm text-slate-500">{caseItem.title}</p>
-                        ) : courtName ? (
-                          <p className="mt-2 text-sm text-slate-500">{courtName}</p>
-                        ) : null}
+                      <div className="mt-4 flex items-start justify-between gap-4">
+                        <div>
+                          <h2 className="text-base font-bold font-display text-white">{headerTitle}</h2>
+                          {showSubtitle ? (
+                            <p className="mt-1.5 text-xs text-slate-400 line-clamp-2 leading-relaxed">{caseItem.title}</p>
+                          ) : courtName ? (
+                            <p className="mt-1.5 text-xs text-slate-400 line-clamp-2 leading-relaxed">{courtName}</p>
+                          ) : null}
+                        </div>
                       </div>
+
                       {isProcessing ? (
-                        <div className="flex items-center gap-3 rounded-3xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-                          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-slate-300 border-t-slate-900 animate-spin" />
-                          Processing
+                        <div className="mt-5 rounded-lg border border-slateface bg-darkbg p-4 flex items-center justify-center gap-3 text-xs text-slate-400">
+                          <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border-2 border-slateface border-t-limeaccent animate-spin" />
+                          Running analysis agents...
                         </div>
-                      ) : null}
+                      ) : (
+                        <>
+                          {summary ? (
+                            <p className="mt-4 line-clamp-3 text-xs leading-relaxed text-slate-400">{summary}</p>
+                          ) : null}
+
+                          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                            {hasDeadline ? (
+                              <div className="rounded-lg bg-darkbg p-3 border border-slateface">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Action Deadline</p>
+                                <p className="mt-1 text-xs font-semibold text-slate-300">{deadlineText}</p>
+                              </div>
+                            ) : null}
+                            {hasConfidence ? (
+                              <div className="rounded-lg bg-darkbg p-3 border border-slateface">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">AI Confidence</p>
+                                <p className="mt-1 text-xs font-semibold text-slate-300">{(confidenceScore * 100).toFixed(0)}% Match</p>
+                              </div>
+                            ) : null}
+                          </div>
+                        </>
+                      )}
                     </div>
 
-                    {isProcessing ? (
-                      <div className="mt-6 rounded-3xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-                        AI is processing this case...
-                      </div>
-                    ) : (
-                      <>
-                        {summary ? (
-                          <p className="mt-5 line-clamp-3 text-sm leading-6 text-slate-600">{summary}</p>
-                        ) : null}
-
-                        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                          {hasDeadline ? (
-                            <div className="rounded-3xl bg-sky-50 p-4">
-                              <p className="text-xs uppercase tracking-[0.24em] text-sky-600">Deadline</p>
-                              <p className="mt-2 text-sm font-semibold text-slate-950">{deadlineText}</p>
-                            </div>
-                          ) : null}
-                          {hasConfidence ? (
-                            <div className="rounded-3xl bg-slate-50 p-4">
-                              <p className="text-xs uppercase tracking-[0.24em] text-slate-500">AI Confidence</p>
-                              <p className="mt-2 text-sm font-semibold text-slate-950">{confidenceScore.toFixed(2)}</p>
-                            </div>
-                          ) : null}
-                        </div>
-                      </>
-                    )}
-
-                    <div className="mt-6 flex flex-wrap items-center gap-3">
+                    <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slateface/40 pt-4">
                       <button
                         type="button"
                         onClick={(event) => {
                           event.stopPropagation()
                           navigate(`/cases/${caseItem.id}`)
                         }}
-                        className="inline-flex rounded-3xl bg-sky-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-sky-500"
+                        className="inline-flex rounded-lg bg-limeaccent px-4 py-2 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
                       >
                         Open Case
                       </button>
@@ -446,10 +443,10 @@ export default function CasesPage() {
                           event.stopPropagation()
                           handleDelete(caseItem.id)
                         }}
-                        className={`inline-flex rounded-3xl border px-5 py-3 text-sm font-semibold transition ${
+                        className={`inline-flex rounded-lg border px-4 py-2 text-xs font-bold transition ${
                           caseItem.status === 'approved'
-                            ? 'border-slate-300 bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'border-rose-200 bg-white text-rose-700 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50'
+                            ? 'border-slateface bg-darkbg text-slate-600 cursor-not-allowed'
+                            : 'border-red-500/25 bg-darkbg text-red-400 hover:bg-red-500/10'
                         }`}
                       >
                         {caseItem.status === 'approved'
@@ -465,18 +462,18 @@ export default function CasesPage() {
             )}
 
             {!loading && visibleCases.length < PAGE_SIZE ? (
-              <div className="rounded-[28px] border-dashed border border-slate-300 bg-slate-50 p-8 text-center text-slate-500 shadow-sm">
-                <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-3xl border border-slate-200 bg-white text-slate-700">
+              <div className="rounded-2xl border-dashed border border-slateface bg-darkbg p-8 text-center text-slate-500 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+                <div className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-lg border border-slateface bg-graphite text-white font-bold text-lg shadow-sm">
                   +
                 </div>
-                <p className="mt-4 text-lg font-semibold text-slate-950">Import New Dataset</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-4 text-sm font-semibold text-slate-300">Import New Dataset</p>
+                <p className="mt-2 text-xs leading-5 text-slate-500 max-w-xs">
                   Upload court filings or discovery batches to populate new cases.
                 </p>
                 <button
                   type="button"
-                  onClick={() => navigate('/cases')}
-                  className="mt-5 rounded-3xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-900 transition hover:bg-sky-100"
+                  onClick={() => setUploadOpen(true)}
+                  className="mt-5 rounded-lg border border-slateface bg-graphite px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slateface"
                 >
                   Upload Dataset
                 </button>
@@ -484,14 +481,14 @@ export default function CasesPage() {
             ) : null}
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="text-sm text-slate-600">Showing {filteredCases.length} cases</div>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slateface bg-graphite p-4.5 shadow-sm">
+            <div className="text-xs text-slate-400">Showing {filteredCases.length} active records</div>
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
                 onClick={() => setPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="rounded-3xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slateface bg-darkbg px-4 py-2 text-xs font-bold text-slate-400 transition hover:bg-slateface disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Previous
               </button>
@@ -499,7 +496,7 @@ export default function CasesPage() {
                 type="button"
                 onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
                 disabled={currentPage === pageCount}
-                className="rounded-3xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg border border-slateface bg-darkbg px-4 py-2 text-xs font-bold text-slate-400 transition hover:bg-slateface disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Next
               </button>

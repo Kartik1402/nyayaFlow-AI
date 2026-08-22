@@ -90,19 +90,19 @@ function getSearchablePartyNames(parties: CaseResponse['extraction'] extends { p
 function priorityStyles(priority?: string) {
   switch (priority) {
     case 'High':
-      return 'bg-rose-100 text-rose-700 border-rose-200'
+      return 'border-red-500/20 bg-red-500/10 text-red-400'
     case 'Medium':
-      return 'bg-sky-100 text-sky-700 border-sky-200'
+      return 'border-cyan-500/20 bg-cyan-500/10 text-cyan-400'
     default:
-      return 'bg-blue-100 text-blue-700 border-blue-200'
+      return 'border-slateface bg-slateface text-slate-300'
   }
 }
 
 function deadlineStyles(deadline?: string | null) {
-  if (!deadline) return 'bg-slate-100 text-slate-700 border-slate-200'
+  if (!deadline) return 'border-slateface bg-slateface text-slate-400'
   return isUrgent(deadline)
-    ? 'bg-rose-100 text-rose-700 border-rose-200'
-    : 'bg-cyan-100 text-cyan-700 border-cyan-200'
+    ? 'border-red-500/20 bg-red-500/10 text-red-400'
+    : 'border-cyan-500/20 bg-cyan-500/10 text-cyan-400 shadow-sm'
 }
 
 export default function VerifiedCasesPage() {
@@ -160,7 +160,7 @@ export default function VerifiedCasesPage() {
     cases.forEach((item) => {
       total += 1
       const priority = item.reasoning?.priority || item.action_plan?.priority || 'Low'
-      if (priority === 'High') highPriority += 1
+      if (priority.toLowerCase() === 'high') highPriority += 1
       const deadline = item.extraction?.deadlines?.[0] || item.reasoning?.deadline || item.action_plan?.overall_deadline
       if (deadline) {
         const deadlineTime = new Date(deadline).getTime()
@@ -192,17 +192,17 @@ export default function VerifiedCasesPage() {
         const normalized = searchTerm.trim().toLowerCase()
         const matchesSearch = normalized
           ? [
-              item.extraction?.case_number || '',
-              getCaseTitle(item),
-              item.extraction?.court_name || '',
-              authority,
-              item.searchableParties || '',
-              priority,
-              deadline || '',
-            ]
-              .join(' ')
-              .toLowerCase()
-              .includes(normalized)
+            item.extraction?.case_number || '',
+            getCaseTitle(item),
+            item.extraction?.court_name || '',
+            authority,
+            item.searchableParties || '',
+            priority,
+            deadline || '',
+          ]
+            .join(' ')
+            .toLowerCase()
+            .includes(normalized)
           : true
 
         let matchesDeadline = true
@@ -267,18 +267,18 @@ export default function VerifiedCasesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-darkbg text-slate-100">
       <div className="flex min-h-screen">
         <Sidebar onAddCase={() => setUploadOpen(true)} />
         <div className="flex-1 p-6 lg:p-8">
           <UploadModal open={uploadOpen} onClose={() => setUploadOpen(false)} onUpload={handleUpload} />
 
-          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between border-b border-slateface pb-6">
             <div>
-              <p className="text-sm uppercase tracking-[0.3em] text-slate-500">Verified Cases Dashboard</p>
-              <h1 className="mt-3 text-4xl font-semibold text-slate-950">Verified cases for execution</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                View approved legal cases with action plans, deadlines, and execution tasks. This page shows only verified cases.
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 font-display">Intelligence Dashboard</p>
+              <h1 className="mt-2 text-2xl font-bold font-display text-white">Verified Action Plans</h1>
+              <p className="mt-2.5 max-w-2xl text-xs text-slate-400">
+                Monitor approved legal cases with associated directives, roadmap tasks, and organizational deadlines.
               </p>
             </div>
 
@@ -286,41 +286,40 @@ export default function VerifiedCasesPage() {
               type="button"
               onClick={() => setUploadOpen(true)}
               disabled={uploadInProgress}
-              className="inline-flex items-center justify-center rounded-3xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime disabled:cursor-not-allowed disabled:opacity-50"
             >
-              + Add New Case
+              + Ingest Judgment
             </button>
           </div>
 
           <div className="grid gap-4 xl:grid-cols-4">
-            <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-6 shadow-sm shadow-sky-200/20">
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">Total Verified Cases</p>
-              <p className="mt-5 text-4xl font-semibold text-slate-950">{summary.total}</p>
+            <div className="rounded-xl border border-slateface bg-graphite p-5 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Verified Dossiers</p>
+              <p className="mt-3.5 text-3xl font-bold text-white font-display">{summary.total}</p>
             </div>
-            <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">High Priority Cases</p>
-              <p className="mt-5 text-4xl font-semibold text-slate-950">{summary.highPriority}</p>
+            <div className="rounded-xl border border-slateface bg-graphite p-5 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Critical Priority</p>
+              <p className="mt-3.5 text-3xl font-bold text-red-400 font-display">{summary.highPriority}</p>
             </div>
-            <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-cyan-50 to-white p-6 shadow-sm shadow-cyan-200/20">
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">Upcoming Deadlines</p>
-              <p className="mt-5 text-4xl font-semibold text-slate-950">{summary.upcoming}</p>
+            <div className="rounded-xl border border-slateface bg-graphite p-5 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Pending Limit (&lt;72h)</p>
+              <p className="mt-3.5 text-3xl font-bold text-cyan-400 font-display">{summary.upcoming}</p>
             </div>
-            <div className="rounded-[28px] border border-slate-200 bg-gradient-to-br from-rose-50 to-white p-6 shadow-sm shadow-rose-200/20">
-              <p className="text-sm uppercase tracking-[0.28em] text-slate-500">Immediate action required</p>
-              <p className="mt-5 text-4xl font-semibold text-slate-950">{summary.immediate}</p>
-              <p className="mt-2 text-sm text-slate-600">cases require immediate action</p>
+            <div className="rounded-xl border border-slateface bg-graphite p-5 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Overdue / Immediate</p>
+              <p className="mt-3.5 text-3xl font-bold text-limeaccent font-display shadow-lime">{summary.immediate}</p>
             </div>
           </div>
 
-          <div className="mt-8 rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-8 rounded-xl border border-slateface bg-graphite p-6 shadow-sm">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5 flex-1">
                 <div className="min-w-0">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Priority</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Priority</label>
                   <select
                     value={priorityFilter}
                     onChange={(event) => setPriorityFilter(event.target.value)}
-                    className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none"
+                    className="mt-2.5 w-full rounded-lg border border-slateface bg-darkbg px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {PRIORITY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -331,11 +330,11 @@ export default function VerifiedCasesPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Authority</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Agency / Dept</label>
                   <select
                     value={authorityFilter}
                     onChange={(event) => setAuthorityFilter(event.target.value)}
-                    className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none"
+                    className="mt-2.5 w-full rounded-lg border border-slateface bg-darkbg px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     <option value="">All Authorities</option>
                     {authorityOptions.map((authority) => (
@@ -347,11 +346,11 @@ export default function VerifiedCasesPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Deadline range</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Deadline Range</label>
                   <select
                     value={deadlineFilter}
                     onChange={(event) => setDeadlineFilter(event.target.value)}
-                    className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none"
+                    className="mt-2.5 w-full rounded-lg border border-slateface bg-darkbg px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {DEADLINE_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -362,11 +361,11 @@ export default function VerifiedCasesPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Sort by</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Sort By</label>
                   <select
                     value={sortBy}
                     onChange={(event) => setSortBy(event.target.value)}
-                    className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none"
+                    className="mt-2.5 w-full rounded-lg border border-slateface bg-darkbg px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {SORT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -376,11 +375,11 @@ export default function VerifiedCasesPage() {
                   </select>
                 </div>
                 <div className="min-w-0">
-                  <label className="block text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Group by</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">Group By</label>
                   <select
                     value={groupBy}
                     onChange={(event) => setGroupBy(event.target.value)}
-                    className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none"
+                    className="mt-2.5 w-full rounded-lg border border-slateface bg-darkbg px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                   >
                     {GROUP_BY_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -391,13 +390,16 @@ export default function VerifiedCasesPage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <input
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search cases, IDs, or authorities..."
-                  className="w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-200 xl:w-[360px]"
-                />
+              <div className="flex flex-wrap items-end gap-3 xl:pl-4">
+                <div className="min-w-0">
+                  <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-2.5">Text filter</label>
+                  <input
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    placeholder="Search litigants, numbers..."
+                    className="w-full rounded-lg border border-slateface bg-darkbg px-4 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30 xl:w-[280px]"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => {
@@ -407,9 +409,9 @@ export default function VerifiedCasesPage() {
                     setGroupBy('')
                     setSearchTerm('')
                   }}
-                  className="rounded-3xl border border-sky-200 bg-sky-50 px-5 py-3 text-sm font-semibold text-sky-900 transition hover:bg-sky-100"
+                  className="rounded-lg border border-slateface bg-darkbg px-4 py-2 text-xs font-bold text-slate-400 transition hover:bg-slateface"
                 >
-                  Clear filters
+                  Reset
                 </button>
               </div>
             </div>
@@ -419,12 +421,12 @@ export default function VerifiedCasesPage() {
             {Object.entries(groupedCases).map(([groupLabel, groupItems]) => (
               <div key={groupLabel}>
                 {groupBy === 'authority' ? (
-                  <div className="mb-6 flex items-center justify-between rounded-3xl bg-slate-100 px-6 py-4">
+                  <div className="mb-6 flex items-center justify-between rounded-xl border border-slateface bg-graphite px-6 py-4.5">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Authority</p>
-                      <p className="mt-2 text-xl font-semibold text-slate-950">{groupLabel}</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">Authority Domain</p>
+                      <p className="mt-1 text-base font-bold font-display text-white">{groupLabel}</p>
                     </div>
-                    <p className="text-sm text-slate-600">{groupItems.length} verified case{groupItems.length === 1 ? '' : 's'}</p>
+                    <p className="text-xs text-slate-400">{groupItems.length} active dossier{groupItems.length === 1 ? '' : 's'}</p>
                   </div>
                 ) : null}
 
@@ -450,83 +452,73 @@ export default function VerifiedCasesPage() {
                             navigate(`/cases/${caseItem.id}`)
                           }
                         }}
-                        className="group cursor-pointer rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
+                        className="group cursor-pointer rounded-xl border border-slateface bg-graphite p-6 shadow-sm transition hover:border-limeaccent/35 hover:-translate-y-0.5"
                       >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slateface/60 pb-4">
                           <div>
-                            <p className="text-xs uppercase tracking-[0.28em] text-slate-500">Case ID</p>
-                            <p className="mt-2 text-sm font-semibold text-slate-950">
+                            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500">Dossier Ident</p>
+                            <p className="mt-1 text-xs font-semibold text-slate-200">
                               {caseItem.extraction?.formatted_case_number || caseItem.extraction?.case_number || `#${caseItem.id}`}
                             </p>
                           </div>
-                          <span className="rounded-2xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                          <span className="rounded-md border border-limeaccent/20 bg-limeaccent/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-limeaccent shadow-lime">
                             VERIFIED
                           </span>
                         </div>
 
-                        <div className="mt-6">
-                          <h2 className="text-xl font-semibold text-slate-950">{subtitle || headerLabel}</h2>
+                        <div className="mt-5">
+                          <h2 className="text-base font-bold font-display text-white leading-relaxed">{subtitle || headerLabel}</h2>
                           {subtitle ? (
-                            <p className="mt-2 text-sm text-slate-500">{headerLabel}</p>
+                            <p className="mt-1 text-xs text-slate-400">{headerLabel}</p>
                           ) : null}
-                          <p className="mt-3 text-sm text-slate-500">{courtName}</p>
-                          <p className="mt-2 text-sm text-slate-500">{authority}</p>
+                          <p className="mt-2 text-xs text-slate-400">{courtName}</p>
+                          <p className="mt-1 text-xs text-slate-400 font-semibold text-slate-300">{authority}</p>
                         </div>
 
-                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-                          <div className="rounded-3xl bg-slate-50 p-4">
-                            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Action type</p>
-                            <p className="mt-2 text-sm font-semibold text-slate-950">{actionType}</p>
+                        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                          <div className="rounded-lg border border-slateface bg-darkbg p-3">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Action Type</p>
+                            <p className="mt-1.5 text-xs font-semibold text-slate-300">{actionType}</p>
                           </div>
-                          <div className={`rounded-3xl border px-4 py-4 text-sm font-semibold transition ${deadlineStyles(deadline)}`}>
-                            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Deadline</p>
-                            <p className="mt-2 text-sm">{deadline ? formatDate(deadline) : 'TBD'}</p>
+                          <div className={`rounded-lg border p-3 text-xs font-semibold transition ${deadlineStyles(deadline)}`}>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Limit Target</p>
+                            <p className="mt-1.5 text-xs font-semibold">{deadline ? formatDate(deadline) : 'TBD'}</p>
                           </div>
-                          <div className={`rounded-3xl border px-4 py-4 text-sm font-semibold transition ${priorityStyles(caseItem.reasoning?.priority || caseItem.action_plan?.priority)}`}>
-                            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Priority</p>
-                            <p className="mt-2 text-sm">{caseItem.reasoning?.priority || caseItem.action_plan?.priority || 'Low'}</p>
+                          <div className={`rounded-lg border p-3 text-xs font-semibold transition ${priorityStyles(caseItem.reasoning?.priority || caseItem.action_plan?.priority)}`}>
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Priority</p>
+                            <p className="mt-1.5 text-xs font-semibold">{caseItem.reasoning?.priority || caseItem.action_plan?.priority || 'Low'}</p>
                           </div>
                         </div>
 
-                        <div className="mt-6">
-                          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Key actions</p>
-                          <div className="mt-3 space-y-2">
+                        <div className="mt-5">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500 mb-3">Key Roadmap Items</p>
+                          <div className="space-y-2">
                             {taskItems.length > 0 ? (
                               taskItems.map((task, index) => (
-                                <div key={`${caseItem.id}-${index}`} className="flex items-start gap-3 rounded-3xl bg-slate-50 px-4 py-3">
-                                  <span className="mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-semibold text-white">✓</span>
+                                <div key={`${caseItem.id}-${index}`} className="flex items-start gap-3 rounded-lg border border-slateface bg-darkbg px-4 py-3">
+                                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-lg bg-limeaccent/10 border border-limeaccent/20 text-[9px] font-bold text-limeaccent shadow-lime">✓</span>
                                   <div>
-                                    <p className="text-sm font-semibold text-slate-950">{task.task}</p>
-                                    {task.deadline ? <p className="text-xs text-slate-500">Due {formatDate(task.deadline)}</p> : null}
+                                    <p className="text-xs font-medium text-slate-300">{task.task}</p>
+                                    {task.deadline ? <p className="text-[10px] text-slate-500 mt-1 font-semibold">Due {formatDate(task.deadline)}</p> : null}
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <p className="rounded-3xl bg-slate-50 px-4 py-3 text-sm text-slate-500">No key actions available</p>
+                              <p className="text-xs text-slate-500">No roadmap actions defined.</p>
                             )}
                           </div>
                         </div>
 
-                        <div className="mt-6 flex flex-wrap gap-3">
+                        <div className="mt-6 flex flex-wrap gap-3 border-t border-slateface/40 pt-4">
                           <button
                             type="button"
                             onClick={(event) => {
                               event.stopPropagation()
                               navigate(`/cases/${caseItem.id}`)
                             }}
-                            className="inline-flex rounded-3xl bg-blue-700 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200/30 transition hover:bg-blue-600"
+                            className="inline-flex rounded-lg bg-limeaccent px-4 py-2 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
                           >
                             Open Case
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              navigate(`/cases/${caseItem.id}`)
-                            }}
-                            className="inline-flex rounded-3xl border border-blue-200 bg-white px-5 py-3 text-sm font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-sky-50"
-                          >
-                            View Files
                           </button>
                         </div>
                       </div>
@@ -538,15 +530,15 @@ export default function VerifiedCasesPage() {
           </div>
 
           {!loading && filteredCases.length === 0 ? (
-            <div className="mt-10 rounded-[28px] border border-slate-200 bg-white p-10 text-center text-slate-600 shadow-sm">
-              <p className="text-lg font-semibold text-slate-950">No verified cases match your filters</p>
-              <p className="mt-3 text-sm">Adjust the filters or add a new case to start tracking verified outcomes.</p>
+            <div className="mt-10 rounded-xl border border-slateface bg-graphite p-10 text-center text-slate-400 shadow-sm">
+              <p className="text-sm font-semibold text-slate-200">No verified cases match your filters</p>
+              <p className="mt-1.5 text-xs text-slate-500">Adjust the filters or add a new case to start tracking verified outcomes.</p>
             </div>
           ) : null}
 
           {loading ? (
-            <div className="mt-10 rounded-[28px] border border-slate-200 bg-white p-10 text-center text-slate-600 shadow-sm">
-              Loading verified cases...
+            <div className="mt-10 rounded-xl border border-slateface bg-graphite p-10 text-center text-slate-400 shadow-sm">
+              Loading verified records...
             </div>
           ) : null}
         </div>

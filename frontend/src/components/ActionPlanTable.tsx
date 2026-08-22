@@ -20,75 +20,75 @@ export default function ActionPlanTable({
   onAddStep,
 }: ActionPlanTableProps) {
   return (
-    <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between gap-3">
+    <section className="rounded-2xl border border-slateface bg-graphite p-6 shadow-sm">
+      <div className="flex items-center justify-between gap-3 border-b border-slateface pb-5 mb-6">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Action Plan</p>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-950">Task roadmap</h2>
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500 font-display">Operational Tasks</p>
+          <h2 className="mt-1 text-xl font-bold font-display text-white">Execution Roadmap</h2>
         </div>
         <button
           onClick={onAddStep}
-          className="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="rounded-lg bg-limeaccent px-4 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
         >
           + Add Step
         </button>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-        <table className="min-w-full divide-y divide-slate-200 text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500">
+      <div className="overflow-x-auto rounded-xl border border-slateface bg-darkbg">
+        <table className="min-w-full divide-y divide-slateface text-left text-xs">
+          <thead className="bg-graphite text-slate-400 font-display font-semibold uppercase tracking-wider">
             <tr>
-              <th className="px-4 py-4">Step</th>
-              <th className="px-4 py-4">Task Description</th>
-              <th className="px-4 py-4">Assigned To</th>
-              <th className="px-4 py-4">Deadline</th>
-              <th className="px-4 py-4">Status</th>
+              <th className="px-5 py-4 w-16">Step</th>
+              <th className="px-5 py-4 w-1/2">Task Description</th>
+              <th className="px-5 py-4">Assigned Department / Agent</th>
+              <th className="px-5 py-4 w-32">Target Deadline</th>
+              <th className="px-5 py-4 w-28">Status</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-200 bg-white">
+          <tbody className="divide-y divide-slateface bg-darkbg">
             {actionPlan.map((item, index) => (
-              <tr key={item.step} className="hover:bg-slate-50">
-                <td className="px-4 py-4 font-semibold text-slate-900">{item.step}</td>
-                <td className="px-4 py-4 align-top">
+              <tr key={item.step} className="hover:bg-graphite/40 transition">
+                <td className="px-5 py-4 font-bold text-slate-400 font-display">{item.step}</td>
+                <td className="px-5 py-4 align-top">
                   {editable ? (
                     <textarea
                       value={item.task}
                       onChange={(event) => onTaskChange(index, 'task', event.target.value)}
                       rows={2}
-                      className="min-h-[72px] w-full resize-none rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                      className="min-h-[72px] w-full resize-none rounded-lg border border-slateface bg-graphite px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                     />
                   ) : (
-                    <span className="whitespace-normal break-words text-sm text-slate-900">{item.task}</span>
+                    <span className="whitespace-normal break-words text-slate-200 leading-relaxed font-medium">{item.task}</span>
                   )}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-5 py-4 align-middle">
                   {editable ? (
                     <input
                       value={item.assigned_to}
                       onChange={(event) => onTaskChange(index, 'assigned_to', event.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                      className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                     />
                   ) : (
-                    <span>{item.assigned_to}</span>
+                    <span className="text-slate-300 font-semibold">{item.assigned_to}</span>
                   )}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-5 py-4 align-middle">
                   {editable ? (
                     <input
                       value={item.deadline ?? ''}
                       onChange={(event) => onTaskChange(index, 'deadline', event.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                      className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                     />
                   ) : (
-                    <span className="text-slate-600">{item.deadline}</span>
+                    <span className="text-slate-400 font-medium">{item.deadline || 'None'}</span>
                   )}
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-5 py-4 align-middle">
                   {editable ? (
                     <select
                       value={item.status}
                       onChange={(event) => onTaskChange(index, 'status', event.target.value)}
-                      className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900"
+                      className="w-full rounded-lg border border-slateface bg-graphite px-3 py-2 text-xs text-slate-200 outline-none focus:border-limeaccent/30"
                     >
                       <option>Pending</option>
                       <option>In Progress</option>
@@ -96,12 +96,12 @@ export default function ActionPlanTable({
                     </select>
                   ) : (
                     <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      className={`inline-flex rounded-md border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
                         item.status === 'Complete'
-                          ? 'bg-emerald-100 text-emerald-700'
+                          ? 'border-limeaccent/20 bg-limeaccent/10 text-limeaccent shadow-lime'
                           : item.status === 'In Progress'
-                          ? 'bg-amber-100 text-amber-700'
-                          : 'bg-slate-100 text-slate-700'
+                          ? 'border-amber-500/20 bg-amber-500/10 text-amber-400'
+                          : 'border-slate-500/20 bg-slateface text-slate-400'
                       }`}
                     >
                       {item.status}

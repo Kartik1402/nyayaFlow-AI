@@ -20,38 +20,38 @@ export default function ReviewControls({
   rejectLoading = false,
 }: ReviewControlsProps) {
   return (
-    <div className="sticky bottom-0 z-20 border-t border-slate-200 bg-slate-50/95 px-6 py-4 backdrop-blur-lg lg:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+    <div className="sticky bottom-0 z-20 border-t border-slateface bg-graphite/95 px-6 py-4.5 backdrop-blur-lg lg:px-8 shadow-glow">
+      <div className="mx-auto flex max-w-7xl flex-col gap-3.5 sm:flex-row sm:items-center sm:justify-end">
         {editMode ? (
           <button
             onClick={onSave}
             disabled={saveLoading || approveLoading || rejectLoading}
-            className="inline-flex items-center justify-center rounded-2xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {saveLoading ? 'Saving...' : 'Save Changes'}
+            {saveLoading ? 'Saving...' : 'Save Findings'}
           </button>
         ) : (
           <button
             onClick={onEdit}
             disabled={saveLoading || approveLoading || rejectLoading}
-            className="inline-flex items-center justify-center rounded-2xl bg-amber-200 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center rounded-lg border border-slateface bg-darkbg px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slateface disabled:cursor-not-allowed disabled:opacity-60"
           >
-            ✏️ Edit Findings
+            ✏️ Edit Draft
           </button>
         )}
         <button
           onClick={onApprove}
           disabled={saveLoading || approveLoading || rejectLoading}
-          className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {approveLoading ? 'Approving...' : '✅ Approve Case'}
+          {approveLoading ? 'Approving...' : 'Publish verified dossier'}
         </button>
         <button
           onClick={onReject}
           disabled={saveLoading || approveLoading || rejectLoading}
-          className="inline-flex items-center justify-center rounded-2xl bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-lg border border-red-500/30 bg-red-500/10 px-5 py-2.5 text-xs font-bold text-red-400 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {rejectLoading ? 'Processing...' : '❌ Reject / Feedback'}
+          {rejectLoading ? 'Processing...' : 'Reject & feedback'}
         </button>
       </div>
     </div>
