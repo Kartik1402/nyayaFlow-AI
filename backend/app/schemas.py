@@ -174,3 +174,55 @@ class ExtractionResultResponse(BaseModel):
     cited_statutes: list[ExtractionStatute] = []
     summary: str | None = None
     confidence: dict[str, str] = {}
+
+
+class BulkPreviewRequest(BaseModel):
+    action: str = Field(..., pattern="^(approve)$")
+    case_ids: list[int]
+
+
+class BulkPreviewItem(BaseModel):
+    case_id: int
+    case_number: Optional[str] = None
+    title: str
+
+
+class BulkPreviewIneligibleItem(BaseModel):
+    case_id: int
+    case_number: Optional[str] = None
+    title: str
+    reason: str
+
+
+class BulkPreviewResponse(BaseModel):
+    action: str
+    total_selected: int
+    eligible_count: int
+    ineligible_count: int
+    eligible: list[BulkPreviewItem]
+    ineligible: list[BulkPreviewIneligibleItem]
+
+
+class BulkExecuteRequest(BaseModel):
+    action: str = Field(..., pattern="^(approve)$")
+    case_ids: list[int] = Field(..., min_length=1)
+
+
+class BulkExecuteItem(BaseModel):
+    case_id: int
+    case_number: Optional[str] = None
+    title: str
+    status: str
+    success: bool
+    reason: Optional[str] = None
+
+
+class BulkExecuteResponse(BaseModel):
+    action: str
+    total_requested: int
+    successful_count: int
+    skipped_count: int
+    failed_count: int
+    results: list[BulkExecuteItem]
+
+

@@ -107,3 +107,55 @@ export interface FinalReviewResponse {
   data: Record<string, any>
   error?: string | null
 }
+
+export interface BulkPreviewRequest {
+  action: 'approve'
+  case_ids: number[]
+}
+
+export interface BulkPreviewItem {
+  case_id: number
+  case_number?: string | null
+  title: string
+}
+
+export interface BulkPreviewIneligibleItem {
+  case_id: number
+  case_number?: string | null
+  title: string
+  reason: string
+}
+
+export interface BulkPreviewResponse {
+  action: string
+  total_selected: number
+  eligible_count: number
+  ineligible_count: number
+  eligible: BulkPreviewItem[]
+  ineligible: BulkPreviewIneligibleItem[]
+}
+
+export interface BulkExecuteRequest {
+  action: 'approve'
+  case_ids: number[]
+}
+
+export interface BulkExecuteItem {
+  case_id: number
+  case_number?: string | null
+  title: string
+  status: string
+  success: boolean
+  reason?: string | null
+}
+
+export interface BulkExecuteResponse {
+  action: string
+  total_requested: number
+  successful_count: number
+  skipped_count: number
+  failed_count: number
+  results: BulkExecuteItem[]
+}
+
+

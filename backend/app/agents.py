@@ -56,6 +56,7 @@ Rules:
 - If directives are ambiguous or procedural, classify as appeal_review.
 - If no clear directive exists, classify as no_action.
 - Do not rely on simple keyword matching alone.
+- Use the extracted parties, directives, and deadlines when determining compliance requirements, responsible authority, priority, and action items. Do not discard or replace these fields.
 - If repair_instruction is provided, apply it to adjust the output.
 
 Return ONLY valid JSON.
@@ -67,7 +68,13 @@ You are given structured extraction and reasoning output. Create an administrati
 - tasks
 - workflow_type
 - deadlines
+
+Rules:
+- The action planner must receive the actual directives and deadlines extracted from the judgment.
+- Generate an action plan task based on that actual directive.
+- Do NOT invent generic tasks such as "Review the court directive" unless that is genuinely required. Assign specific tasks based on the directive, assigning to the responsible authority and matching the deadlines exactly.
 """
+
 
 EXPLANATION_PROMPT = """
 You are given extraction and reasoning results for a court judgment. Explain why the decision was made. Output valid JSON with:
@@ -104,14 +111,30 @@ def run_extraction_agent(chunks: List[Dict[str, Any]], repair_instruction: Optio
             "confidence_scores": {},
         }
 
-    prompt = EXTRACTION_PROMPT + "\n\n" + "\n\n".join([
-        f"Chunk {chunk['index']}: {chunk['text']}" for chunk in chunks
-    ])
-    if repair_instruction:
-        prompt += "\n\nRepair instruction:\n" + repair_instruction
-    raw = call_llm(prompt)
-    response = parse_json_response(raw)
-    return response
+    from app.extraction_service import call_llm_extractor, _validate_chunk_output, _merge_chunk_outputs, _serialize_jsonable
+    
+    outputs = []
+    for chunk in chunks:
+        chunk_index = chunk.get("index") if chunk.get("index") is not None else chunk.get("chunk_index", 0)
+        chunk_text = chunk.get("text", "")
+        raw_response = call_llm_extractor(chunk_text, chunk_index, repair_instruction)
+        
+        # safe parse json
+        try:
+            parsed = json.loads(raw_response)
+        except Exception:
+            try:
+                start = raw_response.index("{")
+                end = raw_response.rindex("}")
+                parsed = json.loads(raw_response[start:end + 1])
+            except Exception:
+                parsed = {}
+                
+        chunk_output = _validate_chunk_output(parsed)
+        outputs.append(chunk_output)
+        
+    merged = _merge_chunk_outputs(outputs)
+    return _serialize_jsonable(merged)
 
 
 def build_reasoning_prompt(extraction: Dict[str, Any], repair_instruction: Optional[str] = None) -> str:

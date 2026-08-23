@@ -218,6 +218,20 @@ pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
+
+## Safeguarded Bulk Actions & AI Pipeline Refinement
+
+### 1. Safeguarded Bulk Actions
+Allows bulk approval of multiple cases in a secure, human-verified manner:
+- **Bulk Selection UI**: Row checkboxes, a "Select All Visible" header row, and a bottom bulk-action toolbar.
+- **Backend Read-Only Preview**: Previews eligibility against business rules (`/cases/bulk/preview`) returning lists of eligible and ineligible cases with specific failure reasons.
+- **Multi-Stage Confirmation Dialog**: Displays dynamic counts (selected, eligible, skipped), lists eligible vs skipped cases, handles cancels securely, and blocks double submissions.
+- **Backend Revalidation on Execute**: Re-checks and ensures DB status consistency at execution time (`/cases/bulk/execute`) to avoid race conditions. Operates in isolated transactions per-case, supporting partial success.
+
+### 2. Initial Processing Pipeline Refinement
+- **Consistent Chunk-by-Chunk Extraction**: The initial pipeline now leverages the exact same individual chunk-based extraction, validation, and merge algorithm as the reprocessing path. This prevents token overflow and consistently extracts case numbers, court names, petitioner/respondent names, court directives, and deadlines from the beginning.
+- **Reasoning & Action Planning Prompt Reinforcements**: Directs the LLM models to strictly base action plans and responsible authorities on actual extracted court directives and deadlines.
+
 ## Podman PostgreSQL + pgAdmin Setup
 
 1. Run the script from the repository root:

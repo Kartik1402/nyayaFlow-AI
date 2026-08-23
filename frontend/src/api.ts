@@ -67,4 +67,23 @@ export async function uploadAndProcessCase(file: File): Promise<CaseResponse> {
 export async function deleteCase(caseId: number): Promise<CaseResponse> {
   return fetch(`${BASE_URL}/cases/${caseId}`, {
     method: 'DELETE',
-  }).then(handleResponse) }
+  }).then(handleResponse)
+}
+
+export async function previewBulkApprove(caseIds: number[]): Promise<import('./types').BulkPreviewResponse> {
+  return fetch(`${BASE_URL}/cases/bulk/preview`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'approve', case_ids: caseIds }),
+  }).then(handleResponse)
+}
+
+export async function executeBulkApprove(caseIds: number[]): Promise<import('./types').BulkExecuteResponse> {
+  return fetch(`${BASE_URL}/cases/bulk/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'approve', case_ids: caseIds }),
+  }).then(handleResponse)
+}
+
+

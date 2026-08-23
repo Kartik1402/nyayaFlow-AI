@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import UploadModal from '../components/UploadModal'
 import { CaseResponse } from '../types'
-import { deleteCase, fetchCases, uploadAndProcessCase } from '../api'
+import { deleteCase, fetchCases, uploadAndProcessCase, previewBulkApprove, executeBulkApprove } from '../api'
 
 const STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
@@ -140,7 +140,64 @@ export default function CasesPage() {
   const [uploadOpen, setUploadOpen] = useState(false)
   const [uploadError, setUploadError] = useState('')
   const [uploadInProgress, setUploadInProgress] = useState(false)
+  
+  // Bulk Action States
+  const [selectedCaseIds, setSelectedCaseIds] = useState<number[]>([])
+  const [previewLoading, setPreviewLoading] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+  const [previewResponse, setPreviewResponse] = useState<import('../types').BulkPreviewResponse | null>(null)
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false)
+  
+  const [executeLoading, setExecuteLoading] = useState(false)
+  const [executeResponse, setExecuteResponse] = useState<import('../types').BulkExecuteResponse | null>(null)
+  const [executeError, setExecuteError] = useState<string | null>(null)
+  const [showResultState, setShowResultState] = useState(false)
+
   const navigate = useNavigate()
+
+  const toggleSelectCase = (caseId: number) => {
+    setSelectedCaseIds((prev) =>
+      prev.includes(caseId) ? prev.filter((id) => id !== caseId) : [...prev, caseId]
+    )
+  }
+
+  const handleApproveSelected = async () => {
+    setPreviewLoading(true)
+    setPreviewError(null)
+    try {
+      const response = await previewBulkApprove(selectedCaseIds)
+      setPreviewResponse(response)
+      setConfirmModalOpen(true)
+    } catch (err: any) {
+      const errMsg = err?.message || 'Unable to check the selected cases. Please try again.'
+      setPreviewError(errMsg)
+      window.alert(errMsg)
+    } finally {
+      setPreviewLoading(false)
+    }
+  }
+
+  const handleConfirmApprove = async () => {
+    if (!previewResponse || executeLoading) return
+    setExecuteLoading(true)
+    setExecuteError(null)
+    try {
+      const response = await executeBulkApprove(selectedCaseIds)
+      setExecuteResponse(response)
+      setShowResultState(true)
+      
+      const successfulIds = response.results.filter(r => r.success).map(r => r.case_id)
+      setSelectedCaseIds(prev => prev.filter(id => !successfulIds.includes(id)))
+      
+      const freshCases = await fetchCases()
+      setCases(freshCases)
+    } catch (err: any) {
+      setExecuteError(err?.message || 'Bulk approval could not be completed. Please try again.')
+    } finally {
+      setExecuteLoading(false)
+    }
+  }
+
 
   useEffect(() => {
     fetchCases()
@@ -208,6 +265,8 @@ export default function CasesPage() {
   }, [page, pageCount])
 
   const visibleCases = filteredCases.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const visibleCaseIds = visibleCases.map((c) => c.id)
+
 
   async function handleUpload(file: File) {
     setUploadError('')
@@ -334,6 +393,301 @@ export default function CasesPage() {
             onUpload={handleUpload}
           />
 
+          {/* Select All Visible toggle bar */}
+          {!loading && visibleCases.length > 0 && (
+            <div className="mt-6 flex items-center justify-between bg-darkbg border border-slateface rounded-xl px-4 py-3 shadow-sm">
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={visibleCaseIds.length > 0 && visibleCaseIds.every((id) => selectedCaseIds.includes(id))}
+                  onChange={() => {
+                    const allSel = visibleCaseIds.length > 0 && visibleCaseIds.every((id) => selectedCaseIds.includes(id));
+                    if (allSel) {
+                      setSelectedCaseIds((prev) => prev.filter((id) => !visibleCaseIds.includes(id)));
+                    } else {
+                      setSelectedCaseIds((prev) => Array.from(new Set([...prev, ...visibleCaseIds])));
+                    }
+                  }}
+                  className="h-4 w-4 rounded border-slate-700 bg-darkbg text-limeaccent focus:ring-limeaccent/30 outline-none cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-300">Select All Visible ({visibleCases.length})</span>
+              </label>
+              {selectedCaseIds.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedCaseIds([])}
+                  className="text-xs font-bold text-red-400 hover:text-red-300 transition"
+                >
+                  Clear All ({selectedCaseIds.length})
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Bulk Action Toolbar */}
+          {selectedCaseIds.length > 0 && (
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center justify-between gap-6 rounded-2xl border border-limeaccent/30 bg-graphite/95 backdrop-blur px-6 py-4 shadow-2xl animate-fade-in-up">
+              <div className="flex items-center gap-3">
+                <span className="h-2 w-2 rounded-full bg-limeaccent animate-pulse" />
+                <span className="text-sm font-semibold text-slate-200 font-display">
+                  {selectedCaseIds.length} {selectedCaseIds.length === 1 ? 'case' : 'cases'} selected
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCaseIds([])}
+                  className="rounded-lg border border-slateface bg-darkbg px-4 py-2 text-xs font-bold text-slate-400 transition hover:bg-slateface hover:text-slate-200"
+                >
+                  Clear
+                </button>
+                <button
+                  type="button"
+                  onClick={handleApproveSelected}
+                  disabled={previewLoading}
+                  className="inline-flex items-center justify-center rounded-lg bg-limeaccent px-5 py-2 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime disabled:opacity-50"
+                >
+                  {previewLoading ? 'Checking...' : 'Approve Selected'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Confirmation / Execution Result Modal */}
+          {confirmModalOpen && (previewResponse || executeLoading || executeError || showResultState) && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+              <div className="relative w-full max-w-2xl rounded-2xl border border-slateface bg-graphite p-6 shadow-2xl flex flex-col max-h-[85vh] animate-scale-up">
+                
+                {/* 1. Loading State */}
+                {executeLoading && (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border-4 border-slateface border-t-limeaccent animate-spin" />
+                    <p className="text-sm font-semibold text-slate-200">Approving selected cases...</p>
+                    <p className="text-xs text-slate-400">Please do not close this window or refresh the page.</p>
+                  </div>
+                )}
+
+                {/* 2. Execute Error State */}
+                {!executeLoading && executeError && (
+                  <div className="flex flex-col space-y-4">
+                    <div className="border-b border-slateface pb-4">
+                      <h2 className="text-xl font-bold font-display text-red-400">Bulk Execution Failed</h2>
+                    </div>
+                    <div className="py-4 text-sm text-slate-300">
+                      {executeError}
+                    </div>
+                    <div className="border-t border-slateface pt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmModalOpen(false);
+                          setExecuteError(null);
+                        }}
+                        className="rounded-lg bg-slate-700 px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slate-600"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Result Summary State */}
+                {!executeLoading && !executeError && showResultState && executeResponse && (
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    {/* Header */}
+                    <div className="border-b border-slateface pb-4">
+                      <h2 className="text-xl font-bold font-display text-white">Bulk Approval Completed</h2>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Batch operations have finished execution. Here is the summary:
+                      </p>
+                    </div>
+
+                    {/* Stats */}
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-lg bg-darkbg p-3 border border-limeaccent/10 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Approved</p>
+                        <p className="mt-1 text-lg font-bold text-limeaccent">{executeResponse.successful_count}</p>
+                      </div>
+                      <div className="rounded-lg bg-darkbg p-3 border border-red-500/10 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Skipped / Failed</p>
+                        <p className="mt-1 text-lg font-bold text-red-400">{executeResponse.skipped_count + executeResponse.failed_count}</p>
+                      </div>
+                    </div>
+
+                    {/* Scrollable Lists */}
+                    <div className="mt-6 flex-1 overflow-y-auto space-y-6 pr-2">
+                      {executeResponse.successful_count > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-limeaccent mb-2">Approved Cases</h3>
+                          <ul className="space-y-2">
+                            {executeResponse.results.filter(r => r.success).map((item) => (
+                              <li key={item.case_id} className="flex items-start gap-2 text-xs text-slate-300 bg-darkbg/40 p-2 rounded border border-slateface/40">
+                                <span className="text-limeaccent font-bold">✓</span>
+                                <div>
+                                  <span className="font-semibold text-slate-200">
+                                    {item.case_number || `Case #${item.case_id}`}
+                                  </span>
+                                  {item.title && item.title !== item.case_number && (
+                                    <span className="ml-2 text-slate-400">({item.title})</span>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {(executeResponse.skipped_count > 0 || executeResponse.failed_count > 0) && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Skipped / Failed</h3>
+                          <ul className="space-y-2">
+                            {executeResponse.results.filter(r => !r.success).map((item) => (
+                              <li key={item.case_id} className="flex items-start gap-2 text-xs text-slate-300 bg-darkbg/40 p-2 rounded border border-red-500/10">
+                                <span className="text-red-400 font-bold">⚠</span>
+                                <div className="flex-1">
+                                  <div>
+                                    <span className="font-semibold text-slate-200">
+                                      {item.case_number || `Case #${item.case_id}`}
+                                    </span>
+                                    {item.title && item.title !== item.case_number && (
+                                      <span className="ml-2 text-slate-400">({item.title})</span>
+                                    )}
+                                  </div>
+                                  <p className="mt-1 text-[11px] font-medium text-red-400">{item.reason}</p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-6 border-t border-slateface pt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConfirmModalOpen(false);
+                          setShowResultState(false);
+                          setExecuteResponse(null);
+                        }}
+                        className="rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
+                      >
+                        Return to Cases
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Normal Confirmation Mode */}
+                {!executeLoading && !executeError && !showResultState && previewResponse && (
+                  <div className="flex flex-col flex-1 overflow-hidden">
+                    {/* Header */}
+                    <div className="border-b border-slateface pb-4">
+                      <h2 className="text-xl font-bold font-display text-white">Confirm Bulk Approval</h2>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Review case eligibility check from the security validator.
+                      </p>
+                    </div>
+
+                    {/* Stats Summary */}
+                    <div className="mt-4 grid grid-cols-3 gap-3">
+                      <div className="rounded-lg bg-darkbg p-3 border border-slateface text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Selected</p>
+                        <p className="mt-1 text-lg font-bold text-slate-200">{previewResponse.total_selected}</p>
+                      </div>
+                      <div className="rounded-lg bg-darkbg p-3 border border-limeaccent/10 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-limeaccent/60">Eligible</p>
+                        <p className="mt-1 text-lg font-bold text-limeaccent">{previewResponse.eligible_count}</p>
+                      </div>
+                      <div className="rounded-lg bg-darkbg p-3 border border-red-500/10 text-center">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-red-400/60">Skipped</p>
+                        <p className="mt-1 text-lg font-bold text-red-400">{previewResponse.ineligible_count}</p>
+                      </div>
+                    </div>
+
+                    {/* Content Lists */}
+                    <div className="mt-6 flex-1 overflow-y-auto space-y-6 pr-2">
+                      {previewResponse.eligible_count > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-limeaccent mb-2">Eligible for Approval</h3>
+                          <ul className="space-y-2">
+                            {previewResponse.eligible.map((item) => (
+                              <li key={item.case_id} className="flex items-start gap-2 text-xs text-slate-300 bg-darkbg/40 p-2 rounded border border-slateface/40">
+                                <span className="text-limeaccent font-bold">✓</span>
+                                <div>
+                                  <span className="font-semibold text-slate-200">
+                                    {item.case_number || `Case #${item.case_id}`}
+                                  </span>
+                                  {item.title && item.title !== item.case_number && (
+                                    <span className="ml-2 text-slate-400">({item.title})</span>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {previewResponse.ineligible_count > 0 && (
+                        <div>
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-red-400 mb-2">Will be Skipped</h3>
+                          <ul className="space-y-2">
+                            {previewResponse.ineligible.map((item) => (
+                              <li key={item.case_id} className="flex items-start gap-2 text-xs text-slate-300 bg-darkbg/40 p-2 rounded border border-red-500/10">
+                                <span className="text-red-400 font-bold">⚠</span>
+                                <div className="flex-1">
+                                  <div>
+                                    <span className="font-semibold text-slate-200">
+                                      {item.case_number || `Case #${item.case_id}`}
+                                    </span>
+                                    {item.title && item.title !== item.case_number && (
+                                      <span className="ml-2 text-slate-400">({item.title})</span>
+                                    )}
+                                  </div>
+                                  <p className="mt-1 text-[11px] font-medium text-red-400">{item.reason}</p>
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Footer / Buttons */}
+                    <div className="mt-6 border-t border-slateface pt-4 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setConfirmModalOpen(false)}
+                        className="rounded-lg border border-slateface bg-darkbg px-5 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-slateface"
+                      >
+                        Cancel
+                      </button>
+                      {previewResponse.eligible_count > 0 ? (
+                        <button
+                          type="button"
+                          onClick={handleConfirmApprove}
+                          className="rounded-lg bg-limeaccent px-5 py-2.5 text-xs font-bold text-slate-950 transition hover:bg-limehover shadow-lime"
+                        >
+                          Approve {previewResponse.eligible_count} {previewResponse.eligible_count === 1 ? 'Case' : 'Cases'}
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          disabled
+                          className="rounded-lg bg-slate-700 px-5 py-2.5 text-xs font-bold text-slate-500 cursor-not-allowed"
+                        >
+                          Approve 0 Cases
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
             {loading ? (
               <div className="col-span-full rounded-2xl border border-slateface bg-graphite p-8 text-center text-slate-400 shadow-sm">
@@ -370,9 +724,21 @@ export default function CasesPage() {
                   >
                     <div>
                       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slateface/60 pb-3">
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 font-display">
-                          {caseItem.extraction?.case_number ? `No. ${caseItem.extraction.case_number}` : `Case #${caseItem.id}`}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selectedCaseIds.includes(caseItem.id)}
+                            onChange={(e) => {
+                              e.stopPropagation()
+                              toggleSelectCase(caseItem.id)
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 rounded border-slate-700 bg-darkbg text-limeaccent focus:ring-limeaccent/30 outline-none cursor-pointer"
+                          />
+                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 font-display">
+                            {caseItem.extraction?.case_number ? `No. ${caseItem.extraction.case_number}` : `Case #${caseItem.id}`}
+                          </span>
+                        </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${getStatusTagStyles(mappedStatus)}`}>
                             {mappedStatus}

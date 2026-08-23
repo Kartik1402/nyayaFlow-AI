@@ -955,3 +955,148 @@ def review_case(case_id: int, review_request: schemas.CaseReviewRequest, db: Ses
 @app.get("/dashboard", response_model=list[schemas.CaseResponse])
 def dashboard(db: Session = Depends(get_db)):
     return crud.list_cases(db, status="approved")
+
+
+def check_case_eligibility(case: models.Case) -> tuple[bool, Optional[str]]:
+    status = case.status
+    if status in ("processed", "pending_review"):
+        return True, None
+    elif status == "approved":
+        return False, "Case is already approved"
+    elif status == "draft":
+        return False, "Processing not completed"
+    elif status == "rejected":
+        return False, "Case is rejected"
+    elif status == "needs_manual_review":
+        return False, "Requires manual review"
+    else:
+        return False, f"Invalid status: {status}"
+
+
+@app.post("/cases/bulk/preview", response_model=schemas.BulkPreviewResponse)
+def bulk_preview(request: schemas.BulkPreviewRequest, db: Session = Depends(get_db)):
+    # Deduplicate while preserving order
+    unique_ids = list(dict.fromkeys(request.case_ids))
+    
+    eligible_items = []
+    ineligible_items = []
+
+    for case_id in unique_ids:
+        case = crud.get_case(db, case_id)
+        if not case:
+            ineligible_items.append(schemas.BulkPreviewIneligibleItem(
+                case_id=case_id,
+                case_number=None,
+                title="Unknown Case",
+                reason="Case not found"
+            ))
+            continue
+
+        case_num = None
+        if isinstance(case.extraction, dict):
+            case_num = case.extraction.get("case_number")
+
+        eligible, reason = check_case_eligibility(case)
+        if eligible:
+            eligible_items.append(schemas.BulkPreviewItem(
+                case_id=case.id,
+                case_number=case_num,
+                title=case.title
+            ))
+        else:
+            ineligible_items.append(schemas.BulkPreviewIneligibleItem(
+                case_id=case.id,
+                case_number=case_num,
+                title=case.title,
+                reason=reason
+            ))
+
+    return schemas.BulkPreviewResponse(
+        action=request.action,
+        total_selected=len(unique_ids),
+        eligible_count=len(eligible_items),
+        ineligible_count=len(ineligible_items),
+        eligible=eligible_items,
+        ineligible=ineligible_items
+    )
+
+
+@app.post("/cases/bulk/execute", response_model=schemas.BulkExecuteResponse)
+def bulk_execute(request: schemas.BulkExecuteRequest, db: Session = Depends(get_db)):
+    # Deduplicate while preserving order to ensure idempotency
+    unique_ids = list(dict.fromkeys(request.case_ids))
+    
+    results = []
+    successful_count = 0
+    skipped_count = 0
+    failed_count = 0
+
+    for case_id in unique_ids:
+        case = crud.get_case(db, case_id)
+        if not case:
+            results.append(schemas.BulkExecuteItem(
+                case_id=case_id,
+                case_number=None,
+                title="Unknown Case",
+                status="skipped",
+                success=False,
+                reason="Case not found"
+            ))
+            skipped_count += 1
+            continue
+
+        case_num = None
+        if isinstance(case.extraction, dict):
+            case_num = case.extraction.get("case_number")
+
+        # Revalidate eligibility on the latest database state
+        eligible, reason = check_case_eligibility(case)
+        if eligible:
+            try:
+                case.status = "approved"
+                crud.mark_case_review(db, case, {"action": "approve", "reviewer_comment": "Bulk approved"})
+                db.commit()
+                db.refresh(case)
+                results.append(schemas.BulkExecuteItem(
+                    case_id=case.id,
+                    case_number=case_num,
+                    title=case.title,
+                    status="approved",
+                    success=True,
+                    reason=None
+                ))
+                successful_count += 1
+            except Exception as e:
+                db.rollback()
+                logger.exception("Failed to approve case %s in bulk approval execution", case_id)
+                results.append(schemas.BulkExecuteItem(
+                    case_id=case.id,
+                    case_number=case_num,
+                    title=case.title,
+                    status="failed",
+                    success=False,
+                    reason="Database update failed"
+                ))
+                failed_count += 1
+        else:
+            results.append(schemas.BulkExecuteItem(
+                case_id=case.id,
+                case_number=case_num,
+                title=case.title,
+                status="skipped",
+                success=False,
+                reason=reason
+            ))
+            skipped_count += 1
+
+    return schemas.BulkExecuteResponse(
+        action=request.action,
+        total_requested=len(unique_ids),
+        successful_count=successful_count,
+        skipped_count=skipped_count,
+        failed_count=failed_count,
+        results=results
+    )
+
+
+
